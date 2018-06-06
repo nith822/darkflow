@@ -1,3 +1,4 @@
+import label_image as t2
 import numpy as np
 import math
 import cv2
@@ -41,22 +42,32 @@ def postprocess(self, net_out, im, save = True):
 	h, w, _ = imgcv.shape
 	
 	resultsForJSON = []
+	counter = 0
+	file_names = []
 	for b in boxes:
 		boxResults = self.process_box(b, h, w, threshold)
 		if boxResults is None:
 			continue
 		left, right, top, bot, mess, max_indx, confidence = boxResults
-		thick = int((h + w) // 300)
+		thick = int((h+w)//300)
 		if self.FLAGS.json:
 			resultsForJSON.append({"label": mess, "confidence": float('%.2f' % confidence), "topleft": {"x": left, "y": top}, "bottomright": {"x": right, "y": bot}})
 			continue
 
-		cv2.rectangle(imgcv,
-			(left, top), (right, bot),
-			colors[max_indx], thick)
-		cv2.putText(imgcv, mess, (left, top - 12),
-			0, 1e-3 * h, colors[max_indx],thick//3)
-
+		#cv2.rectangle(imgcv,
+		#	(left, top), (right, bot),
+		#	colors[max_indx], thick)
+		#cv2.putText(imgcv, mess, (left, top - 12),
+		#	0, 1e-3 * h, colors[max_indx],thick//3)
+		#mycode
+		outfolder = os.path.join(self.FLAGS.imgdir, 'out')
+		img_name = os.path.join(outfolder, os.path.basename(im) + str(counter) + ".jpg")
+		counter+=1
+		a=imgcv[top:bot,left:right]
+		cv2.imwrite(img_name, a)
+		file_names.append(img_name)
+		#end
+	t2.predict(file_names)
 	if not save: return imgcv
 
 	outfolder = os.path.join(self.FLAGS.imgdir, 'out')
@@ -68,4 +79,4 @@ def postprocess(self, net_out, im, save = True):
 			f.write(textJSON)
 		return
 
-	cv2.imwrite(img_name, imgcv)
+	#cv2.imwrite(img_name, a)
